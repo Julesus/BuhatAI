@@ -8,8 +8,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TabBar from './TabBar.jsx'
 import { DEF, useStore } from '../store/useStore.js'
 
+const nav = vi.fn()
 vi.mock('react-router-dom', () => ({
-  useNavigate: () => () => {},
+  useNavigate: () => nav,
   useLocation: () => ({ pathname: '/home' }),
 }))
 
@@ -21,6 +22,7 @@ beforeEach(() => {
   const store = useStore.getState()
   originalS = store.S
   originalUser = store.user
+  nav.mockClear()
   useStore.setState({ S: JSON.parse(JSON.stringify(DEF)), user: { id: 1, name: 'test' } })
   host = document.createElement('div')
   document.body.appendChild(host)
@@ -53,10 +55,10 @@ describe('the tab bar across a store write', () => {
     act(() => { root.render(<TabBar onStart={() => {}} />) })
     expect(tabs()[0].className).toBe('on')
     expect(tabs()[1].className).toBe('')
-    expect(tabs()[2].className).toBe('start')
+    expect(tabs()[4].className).toBe('start')
 
     act(() => { useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0 } }, false) })
-    expect(tabs()[2].className).toBe('start rec')
+    expect(tabs()[4].className).toBe('start rec')
     expect(tabs()[0].className).toBe('on')
   })
 })
@@ -81,19 +83,18 @@ describe('the connection dot on Home', () => {
   })
 })
 
-// v1.3.11 icon sweep: one icon per concept. Every tab carries its name under the icon, Start is a
-// play button whether or not a session runs, and Exercises is the dumbbell (no more generic list).
+// Every tab carries its name under the icon; the floating workout action follows the four tabs.
 describe('the tab icons and labels', () => {
   const icon = el => el.querySelector('svg')?.getAttribute('data-icon')
   const label = el => el.querySelector('span:last-child').textContent
   it('labels every tab and uses one icon per concept', () => {
     act(() => { root.render(<TabBar onStart={() => {}} />) })
-    expect(tabs().map(icon)).toEqual(['house', 'calendar', 'play', 'chart', 'dumbbell'])
-    expect(tabs().map(label)).toEqual(['Home', 'Plan', 'Start', 'Stats', 'Exercises'])
+    expect(tabs().map(icon)).toEqual(['house', 'calendar', 'chart', 'dumbbell', 'play'])
+    expect(tabs().map(label)).toEqual(['Home', 'Plan', 'Stats', 'Exercises', 'Start Empty Workout'])
 
     act(() => { useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0 } }, false) })
-    expect(icon(tabs()[2])).toBe('play')
-    expect(label(tabs()[2])).toBe('Resume')
+    expect(icon(tabs()[4])).toBe('play')
+    expect(label(tabs()[4])).toBe('Resume')
   })
 
   it('shows a minimized session’s running time, still named Resume', () => {
@@ -102,16 +103,43 @@ describe('the tab icons and labels', () => {
       vi.setSystemTime(new Date(2026, 9, 5, 18, 0, 0))
       act(() => { useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0, start: Date.now() - 754_000 } }, false) })
       act(() => { root.render(<TabBar onStart={() => {}} />) })
-      const start = tabs()[2]
+      const start = tabs()[4]
       expect(label(start)).toBe('12:34')
       expect(start.getAttribute('aria-label')).toBe('Resume')
       act(() => { vi.advanceTimersByTime(2000) })
       expect(label(start)).toBe('12:36')
-      expect(tabs()[2]).toBe(start)   // the same button, only its text ticks
+      expect(tabs()[4]).toBe(start)   // the same button, only its text ticks
 
       // a past workout being edited has no clock running
       act(() => { useStore.getState().update(s => { s.active.editingWorkoutId = 'w1' }, false) })
-      expect(label(tabs()[2])).toBe('Edit workout')
+      expect(label(tabs()[4])).toBe('Edit workout')
     } finally { vi.useRealTimers() }
+  })
+})
+
+describe('the floating workout action', () => {
+  it('starts an empty session even when today has a planned routine', () => {
+    const onStart = vi.fn()
+    act(() => {
+      useStore.getState().update(s => {
+        s.routines = [{ id: 'r1', name: 'Push', ex: [{ id: '0025' }] }]
+        s.week = Object.fromEntries(Array.from({ length: 7 }, (_, day) => [day, ['r1']]))
+      }, false)
+      root.render(<TabBar onStart={onStart} />)
+    })
+    act(() => { tabs()[4].click() })
+    expect(onStart).toHaveBeenCalledExactlyOnceWith([])
+    expect(nav).not.toHaveBeenCalled()
+  })
+
+  it('resumes an existing session without starting another', () => {
+    const onStart = vi.fn()
+    act(() => {
+      useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0 } }, false)
+      root.render(<TabBar onStart={onStart} />)
+    })
+    act(() => { tabs()[4].click() })
+    expect(nav).toHaveBeenCalledExactlyOnceWith('/workout')
+    expect(onStart).not.toHaveBeenCalled()
   })
 })
