@@ -41,7 +41,7 @@ describe('the tab bar across a store write', () => {
   it('keeps the very same buttons instead of rebuilding them every tick', () => {
     act(() => { root.render(<TabBar onStart={() => {}} />) })
     const before = tabs()
-    expect(before).toHaveLength(5)
+    expect(before).toHaveLength(6)
 
     // What a rest does once a second: S is replaced, so everything reading it re-renders.
     act(() => { useStore.getState().update(s => { s.restSec = 91 }, false) })
@@ -86,11 +86,12 @@ describe('the connection dot on Home', () => {
 // Every tab carries its name under the icon; the floating workout action follows the four tabs.
 describe('the tab icons and labels', () => {
   const icon = el => el.querySelector('svg')?.getAttribute('data-icon')
-  const label = el => el.querySelector('span:last-child').textContent
+  const label = el => el.querySelector('span:last-child')?.textContent || el.getAttribute('aria-label')
   it('labels every tab and uses one icon per concept', () => {
     act(() => { root.render(<TabBar onStart={() => {}} />) })
-    expect(tabs().map(icon)).toEqual(['house', 'calendar', 'chart', 'dumbbell', 'play'])
-    expect(tabs().map(label)).toEqual(['Home', 'Plan', 'Stats', 'Exercises', 'Start Empty Workout'])
+    expect(tabs().map(icon)).toEqual(['house', 'calendar', 'chart', 'dumbbell', 'play', 'camera'])
+    expect(tabs().map(label)).toEqual(['Home', 'Plan', 'Stats', 'Exercises', 'Start Empty Workout', 'Camera'])
+    expect(tabs()[5].disabled).toBe(true)
 
     act(() => { useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0 } }, false) })
     expect(icon(tabs()[4])).toBe('play')

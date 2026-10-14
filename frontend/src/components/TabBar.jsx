@@ -49,12 +49,17 @@ export default function TabBar({ onStart }) {
           A live session you stepped away from shows its running time instead of a word, the
           button still named Resume; a past workout being edited or logged after the fact has no
           clock to run. */}
-      <button className={'start' + (S.active ? ' rec' : '') + (S.active && cur === 'workout' ? ' on' : '')} onClick={startWorkout}
-        aria-label={running ? t('Resume') : undefined}>
-        <Icon name="play" />
-        {running ? <span className="tab-time"><Elapsed start={S.active.start} /></span>
-          : <span>{S.active ? (cur === 'workout' ? t('Workout') : S.active.editingWorkoutId ? t('Edit workout') : t('Resume')) : t('Start Empty Workout')}</span>}
-      </button>
+      <div className="workout-actions">
+        <button className={'start' + (S.active ? ' rec' : '') + (S.active && cur === 'workout' ? ' on' : '')} onClick={startWorkout}
+          aria-label={running ? t('Resume') : undefined}>
+          <Icon name="play" />
+          {running ? <span className="tab-time"><Elapsed start={S.active.start} /></span>
+            : <span>{S.active ? (cur === 'workout' ? t('Workout') : S.active.editingWorkoutId ? t('Edit workout') : t('Resume')) : t('Start Empty Workout')}</span>}
+        </button>
+        <button className="camera" type="button" aria-label={t('Camera')} disabled>
+          <Icon name="camera" />
+        </button>
+      </div>
     </nav>
   )
 }

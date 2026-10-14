@@ -422,20 +422,26 @@ h4.sec{
   background:var(--orange);box-shadow:0 0 0 2px var(--bg-el);pointer-events:none;
 }
 .iconbtn .tab-dot{top:5px;right:5px;box-shadow:0 0 0 2px var(--bg)}
-#tabbar button.start{
-  position:absolute;right:12px;bottom:calc(100% + 12px);flex:none;
+#tabbar .workout-actions{
+  position:absolute;right:12px;bottom:calc(100% + 12px);
+  display:flex;align-items:stretch;gap:8px;max-width:calc(100% - 24px);
+}
+#tabbar .workout-actions button{
+  flex:none;
   flex-direction:row;justify-content:center;gap:8px;
-  min-height:44px;max-width:calc(100% - 24px);padding:12px 16px;border-radius:8px;
+  min-height:44px;padding:12px 16px;border-radius:8px;
   background:var(--acc);color:var(--on-acc);font-size:14px;font-weight:600;
   box-shadow:0 6px 18px -4px color-mix(in srgb,var(--acc) 55%,transparent);
   transition:transform var(--fast) var(--ease);
 }
 #tabbar button.start:active{transform:scale(.97)}
-#tabbar button.start .icn{font-size:20px;--icon-stroke:2;color:inherit;opacity:1;flex:none}
+#tabbar .workout-actions .icn{font-size:20px;--icon-stroke:2;color:inherit;opacity:1;flex:none}
+#tabbar button.start{flex:0 1 auto;min-width:0}
+#tabbar button.camera{width:44px;padding:12px}
 #tabbar button.start .tab-time{font-variant-numeric:tabular-nums}
 #tabbar button.start.rec{background:var(--orange);color:#000;box-shadow:0 6px 18px -4px color-mix(in srgb,var(--orange) 55%,transparent)}
 /* Leave room for the rest timer between the floating action and the tabs. */
-body.resting #tabbar button.start{bottom:calc(100% + 112px)}
+body.resting #tabbar .workout-actions{bottom:calc(100% + 112px)}
 
 /* NOTE on every backdrop-filter pair in this file: the -webkit- line comes first and the
    standard property last, which is the order a prefixed/standard pair wants — whichever is
